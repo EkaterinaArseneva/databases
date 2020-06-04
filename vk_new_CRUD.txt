@@ -1,0 +1,88 @@
+use vk_new;
+
+-- INSERT + ?????????? ?????? ????????? ???????
+insert into users (id, firstname, lastname, email, phone)
+values ('1', 'Ekaterina', 'Arseneva', 's@bd', '1364');
+
+insert into users values
+('102', 'oleg', 'rub', 'sdf@sdgh', '123'),
+('103', 'olga', 'zubkova', 'sdss@sgh', '3245'),
+('4', 'pavel', 'ovov', 'pavel@cs', '6478754'),
+('5', 'konst', 'lapin', 'konst@sdgh', '245678'),
+('6', 'eug', 'andreeva', 'eug@sdgh', '634'),
+('7', 'vlad', 'tikh', 'vlad@sdgh', '154632')
+;
+
+insert into users 
+set
+-- id = autoincrement
+	firstname = 'ivan',
+	lastname  = 'ivanov',
+	email = 'asdgd@ytn'
+;
+
+insert into vk_new.users
+select id, firstname , lastname, email, phone 
+from vk.users where vk.users.id between 9 and 20;
+
+insert into vk_new.users 
+select * from vk.users where vk.users.id > 20;
+
+insert into vk_new.posts 
+select * from vk.posts;
+
+insert into vk_new.media_albums 
+select * from vk.media_albums;
+
+insert into vk_new.messages 
+select * from vk.messages;
+
+insert into vk_new.media_types values
+	('1','JPEG',null,null),
+	('2','PNG',null,null),
+	('3','GIF',null,null),
+	('5','mp4',null,null),
+	('6','pdf',null,null),
+	('8','MPG',null,null),
+	('9','WMZ',null,null)
+;
+insert into vk_new.media (id, uploader_id, created_at, in_post_id, in_album_id, in_message_id )
+select id, uploader_id, uploaded_at, in_post_id, in_album_id, in_message_id  from vk.media
+
+insert into vk_new.likes 
+select * from vk.likes;
+
+insert into vk_new.communities 
+select * from vk.users_communities ;
+
+insert into vk_new.profiles 
+select * from vk.profiles ;
+
+insert into vk_new.friends_requests 
+select * from vk.friends_requests ;
+-- SELECT
+select * from users;
+
+select lastname, phone, firstname from users limit 3 offset 2;
+
+select * from users 
+where id > 10 or firstname = 'ekaterina';
+
+select * from users 
+where id in (1, 5, 12);
+
+
+-- DELETE
+
+delete from vk_new.profiles 
+where user_id = 1; 
+
+truncate profiles;
+
+-- UPDATE
+update profiles 
+set
+	status = 'm'
+where user_id = 2 ;
+
+
