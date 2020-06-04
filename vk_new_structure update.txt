@@ -1,0 +1,135 @@
+DROP DATABASE IF EXISTS vk_new;
+CREATE DATABASE vk_new;
+USE vk_new;
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+    id SERIAL primary key,
+    firstname VARCHAR(50),
+    lastname VARCHAR(50),
+    email VARCHAR(120) UNIQUE,
+    phone BIGINT UNSIGNED,
+    INDEX users_phone_ind(phone),
+    INDEX users_firstname_lastname_idx(firstname, lastname)
+);
+
+DROP TABLE IF EXISTS posts;
+CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    creator_id BIGINT UNSIGNED NOT NULL,
+    body TEXT,
+    created_at DATETIME DEFAULT NOW(),
+    `status` ENUM('private', 'global', 'friends'),
+    INDEX posts_creator_id (creator_id),
+    FOREIGN KEY (creator_id) REFERENCES users(id)
+);
+
+DROP TABLE IF EXISTS media_albums;
+CREATE TABLE media_albums (
+    id SERIAL PRIMARY KEY,
+    album_name VARCHAR(100) default NULL,
+    owner_id BIGINT UNSIGNED NOT NULL,
+    FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+
+DROP TABLE IF EXISTS messages;
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    from_user_id BIGINT UNSIGNED NOT NULL,
+    to_user_id BIGINT UNSIGNED NOT NULL,
+    body TEXT,
+    created_at DATETIME DEFAULT NOW(),
+    `status` ENUM('outbox', 'sent', 'received', 'delivered', 'read', 'failed'),
+    INDEX messages_from_user_id (from_user_id),
+    INDEX messages_to_user_id (to_user_id),
+    FOREIGN KEY (from_user_id) REFERENCES users(id),
+    FOREIGN KEY (to_user_id) REFERENCES users(id)
+);
+
+drop table if exists media_types;
+create table media_types (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100),
+	created_at DATETIME default NOW(),
+	updated_at DATETIME default current_TIMESTAMP on update current_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS media;
+CREATE TABLE media (
+    id SERIAL primary key,
+    media_type_id BIGINT UNSIGNED default '1',
+    created_at DATETIME DEFAULT NOW(),
+    updated_at DATETIME default current_TIMESTAMP on update current_TIMESTAMP,
+    size INT,
+    uploader_id BIGINT UNSIGNED NOT NULL,
+    
+    in_post_id BIGINT UNSIGNED,
+    in_album_id BIGINT UNSIGNED,
+    in_message_id BIGINT UNSIGNED,
+    INDEX who_uploaded (uploader_id),
+    FOREIGN KEY (uploader_id) REFERENCES users(id),
+    FOREIGN KEY (in_post_id) REFERENCES posts(id),
+    FOREIGN KEY (in_album_id) REFERENCES media_albums(id),
+    FOREIGN KEY (in_message_id) REFERENCES messages(id),
+    FOREIGN KEY (media_type_id) REFERENCES media_types(id)
+);
+
+DROP TABLE IF EXISTS likes;
+CREATE TABLE likes (
+    id SERIAL primary key,
+    who_likes BIGINT UNSIGNED NOT NULL,
+    liked_at DATETIME DEFAULT NOW(),
+    media_liked_id BIGINT UNSIGNED,
+    album_liked_id BIGINT UNSIGNED,
+    post_liked_id BIGINT UNSIGNED,
+    FOREIGN KEY (who_likes) REFERENCES users(id),  
+    FOREIGN KEY (media_liked_id) REFERENCES media(id),  
+    FOREIGN KEY (album_liked_id) REFERENCES media_albums(id),  
+    FOREIGN KEY (post_liked_id) REFERENCES posts(id)  
+);
+
+DROP TABLE IF EXISTS friends_requests;
+CREATE TABLE friends_requests (
+    ini_user_id BIGINT UNSIGNED NOT NULL,
+    target_user_id BIGINT UNSIGNED NOT NULL,
+    requested_at DATETIME DEFAULT NOW(),
+    confirmed_at DATETIME DEFAULT NOW(),
+    PRIMARY KEY (ini_user_id, target_user_id),
+    INDEX (ini_user_id),
+    INDEX (target_user_id),
+    FOREIGN KEY (ini_user_id) REFERENCES users(id),
+    FOREIGN KEY (target_user_id) REFERENCES users(id)
+);
+
+DROP TABLE IF EXISTS communities;
+CREATE TABLE communities (
+    id SERIAL PRIMARY KEY,
+    community_name VARCHAR(100),
+    community_cover_photo BIGINT UNSIGNED,
+    created_at DATETIME DEFAULT NOW(),
+    administrator_id BIGINT UNSIGNED NOT NULL,
+    INDEX community_name (community_name),
+    FOREIGN KEY (administrator_id) REFERENCES users(id),
+    FOREIGN KEY (community_cover_photo) REFERENCES media(id)
+);
+DROP TABLE IF EXISTS users_communities;
+CREATE TABLE users_communities (
+    user_id BIGINT unsigned not NULL,
+    community_id BIGINT unsigned not NULL,
+    primary key (user_id, community_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (community_id) REFERENCES communities(id)
+);
+
+DROP TABLE IF EXISTS `profiles`;
+CREATE TABLE `profiles` (
+    user_id SERIAL primary key,
+    `status` ENUM('m', 'f', 'not_decided'),
+    birthday DATE,
+    Photo_id BIGINT UNSIGNED,
+    created_at DATETIME DEFAULT NOW(),
+    hometown VARCHAR(100),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (Photo_id) REFERENCES media(id)
+);
+
